@@ -24,6 +24,10 @@ public class ActionInvocation implements ActionProxy{
 	
 	public ActionInvocation(){
 	}
+	public ActionInvocation(Object target,Method method){
+		this.target=target;
+		this.method=method;
+	}
 	public ActionInvocation(Object target,Method method,List<Interceptor>interceptors){
 		this.target=target;
 		this.method=method;

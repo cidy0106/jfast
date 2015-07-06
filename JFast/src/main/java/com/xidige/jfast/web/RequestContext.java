@@ -1,6 +1,9 @@
 package com.xidige.jfast.web;
 
+import java.io.IOException;
+
 import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -32,6 +35,9 @@ public class RequestContext {
 		this.servletContext = null;
 		this.config=null;
 		threadLocal.set(null);
+	}
+	public void redirect(String view) throws ServletException, IOException{
+		request.getRequestDispatcher(view).forward(request, response);
 	}
 
 	/**
