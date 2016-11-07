@@ -12,7 +12,10 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<jdk.versoin>1.8</jdk.versoin>
+		<source.version>1.8</source.version>
+		<target.version>1.8</target.version>
+		<servlet.version>3.1.0</servlet.version>
+		<jsp.version>2.3.1</jsp.version>
 		<logging.version>1.2</logging.version>
 		<lang3.version>3.4</lang3.version>
 	</properties>
@@ -24,16 +27,18 @@
 			<version>4.12</version>
 			<scope>test</scope>
 		</dependency>
+	<!-- servlet -->
 		<dependency>
 			<groupId>javax.servlet</groupId>
 			<artifactId>javax.servlet-api</artifactId>
-			<version>3.1.0</version>
+			<version>${servlet.version}</version>
 			<scope>provided</scope>
 		</dependency>
+		<!-- jsp -->
 		<dependency>
 			<groupId>javax.servlet.jsp</groupId>
 			<artifactId>javax.servlet.jsp-api</artifactId>
-			<version>2.3.2-b02</version>
+			<version>${jsp.version}</version>
 			<scope>provided</scope>
 		</dependency>
 		
@@ -54,8 +59,8 @@
 			<plugin>
 				<artifactId>maven-compiler-plugin</artifactId>
 				<configuration>
-					<target>${jdk.versoin}</target>
-					<source>${jdk.versoin}</source>
+					<target>${target.version}</target>
+					<source>${source.version}</source>
 					<encoding>${project.build.sourceEncoding}</encoding>
 				</configuration>
 			</plugin>

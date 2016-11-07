@@ -14,6 +14,11 @@ public class Hello {
 	
 	private static final String MESSAGE_STRING="Hi,i am kime,who are you~";
 	private static final String TEMPLATE_PATH="/WEB-INF/jsp/";
+	
+	public void index() throws IOException{
+		RequestContext requestContext = RequestContext.getContext();
+		requestContext.getResponse().getWriter().append("index....").flush();
+	}
 	public void sayHi(){
 		//to console
 		System.out.println(MESSAGE_STRING);		
