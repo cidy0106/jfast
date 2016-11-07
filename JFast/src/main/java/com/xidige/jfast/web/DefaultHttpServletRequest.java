@@ -1,6 +1,5 @@
 package com.xidige.jfast.web;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -21,13 +20,13 @@ import javax.servlet.http.HttpSession;
  *
  */
 public class DefaultHttpServletRequest extends HttpServletRequestWrapper implements HttpServletRequest {
-	private Map<String,String> params=null;
+	private Map<String,String[]> params=null;
 	/**
 	 * 
 	 * @param request 原始请求
 	 * @param params 附加的参数
 	 */
-	public DefaultHttpServletRequest(HttpServletRequest request,Map<String, String>params) {
+	public DefaultHttpServletRequest(HttpServletRequest request,Map<String, String[]>params) {
 		super(request);
 		this.params=params;
 	}	
@@ -35,31 +34,34 @@ public class DefaultHttpServletRequest extends HttpServletRequestWrapper impleme
 		this(request,null);
 	}
 	
-	private Map<String,Object>paramMap=null;//参数缓存
+	private Map<String,String[]>paramMap=null;//参数缓存
 	@Override
-	public Map<String,Object> getParameterMap() {
+	public Map<String,String[]> getParameterMap() {
 		if (paramMap!=null) {
 			return paramMap;
 		}
-		paramMap=new HashMap<String, Object>();
+		paramMap=new HashMap<String, String[]>();
 		paramMap.putAll(super.getParameterMap());
-		for (Iterator<Entry<String, String>> iterator = params.entrySet().iterator(); iterator.hasNext();) {
-			Entry<String, String> entry = iterator.next();
-			Object origParam=paramMap.get(entry.getKey());
-			if (origParam==null) {
+		for (Iterator<Entry<String, String[]>> iterator = params.entrySet().iterator(); iterator.hasNext();) {
+			Entry<String, String[]> entry = iterator.next();
+			String[] origParam=paramMap.get(entry.getKey());
+			if (origParam==null ||origParam.length==0) {
 				paramMap.put(entry.getKey(), entry.getValue());
 			}else {
-				if (origParam.getClass().isArray()) {
-					String oldValues[]=(String[]) origParam;
-					String values[]=Arrays.copyOf(oldValues, oldValues.length+1);
-					values[oldValues.length]=entry.getValue();
-					paramMap.put(entry.getKey(), values);
-				}else {
-					String []newValues=new String[2];
-					newValues[0]=(String) origParam;
-					newValues[1]=entry.getValue();
-					paramMap.put(entry.getKey(), newValues);
+				String entryValues[]=entry.getValue();
+				if(entryValues==null || entryValues.length==0){
+					continue;
 				}
+				String newValues[]=new String[origParam.length+entryValues.length];
+				int index=0;
+				for (; index < entryValues.length; index++) {
+					newValues[index]=entryValues[index];
+				}
+				for (int i = 0; i < origParam.length; i++) {
+					newValues[index++]=origParam[i];
+				}
+				
+				paramMap.put(entry.getKey(), newValues);					
 			}
 		}
 		return paramMap; 
@@ -73,37 +75,19 @@ public class DefaultHttpServletRequest extends HttpServletRequestWrapper impleme
 		if (name==null) {
 			return name;
 		}
-		String value=null;
-		if (params!=null && params.size()>0) {
-			value=params.get(name);
-		}
-		if (value==null) {
-			Map<String, Object> tempParamMap=getParameterMap();
-			if (tempParamMap!=null && tempParamMap.size()>0) {
-				Object tempValue=tempParamMap.get(name);
-				if (tempValue!=null && tempValue.getClass().isArray()) {
-					String values[]=(String[])tempValue;
-					if (values.length>0) {
-						value=values[0];
-					}
-				}
+		Map<String, String[]> tempParamMap=getParameterMap();
+		if (tempParamMap!=null && tempParamMap.size()>0) {
+			String[] tempValue=tempParamMap.get(name);
+			if (tempValue!=null && tempValue.length>0) {
+				return tempValue[0];
 			}
-		}		
-		return value;
+		}
+		return null;
 	}
 	@Override
 	public String[] getParameterValues(String name) {
-		Map<String, Object> tempParamMap=getParameterMap();
-		Object tempValue=null;
-		String values[]=null;
-		if (tempParamMap!=null && (tempValue=tempParamMap.get(name))!=null) {
-			if(tempValue.getClass().isArray()){
-				values=(String[]) tempValue;
-			}else{
-				values=new String[]{(String)tempValue};
-			}
-		}
-		return values;
+		Map<String, String[]> tempParamMap=getParameterMap();
+		return tempParamMap.get(name);
 	}
 	private Enumeration<String>paramNames=null;
 	@Override
@@ -111,7 +95,7 @@ public class DefaultHttpServletRequest extends HttpServletRequestWrapper impleme
 		if (paramNames!=null) {
 			return paramNames;
 		}
-		Map<String, Object> tempParamMap=getParameterMap();
+		Map<String, String[]> tempParamMap=getParameterMap();
 		if (tempParamMap!=null) {
 			paramNames=Collections.enumeration(tempParamMap.keySet());
 		}
