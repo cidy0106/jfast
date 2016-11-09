@@ -1,9 +1,11 @@
 package com.xidige.jfastdemo.web.action;
 
 import java.io.IOException;
+import java.util.Enumeration;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 
 import com.xidige.jfast.core.log.Log;
 import com.xidige.jfast.core.log.LogFactory;
@@ -21,7 +23,17 @@ public class Hello {
 	}
 	public void sayHi(){
 		//to console
-		System.out.println(MESSAGE_STRING);		
+		System.out.println(MESSAGE_STRING);
+		RequestContext requestContext = RequestContext.getContext();
+		HttpServletRequest req= requestContext.getRequest();
+		Enumeration<String>en= req.getParameterNames();
+		if(en!=null){
+			while (en.hasMoreElements()) {
+				String name = en.nextElement();
+				System.out.println(name+"="+req.getParameter(name));
+			} 
+		}
+		
 	}
 	public void sayHtml(){
 		//to html
@@ -35,5 +47,12 @@ public class Hello {
 		} catch (IOException | ServletException e) {
 			log.error("sayHtml error", e);
 		}				
+	}
+	public void testSession(){
+		RequestContext requestContext = RequestContext.getContext();
+		HttpServletRequest request=requestContext.getRequest();
+		HttpSession session=request.getSession(true);
+		session.setAttribute("test", "kime");
+		System.out.println(session.getAttribute("test"));
 	}
 }

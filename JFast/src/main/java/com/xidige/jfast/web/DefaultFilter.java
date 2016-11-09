@@ -60,11 +60,15 @@ public class DefaultFilter implements Filter,StaticConstants {
 		if (uriInfo!=null) {
 			ActionInvocation actionInvocation= dispatcher.findAction(uriInfo);
 			if (actionInvocation!=null) {
-				dispatcher.initActionContext(req, resp);
+				HttpServletRequest newReq=new DefaultHttpServletRequest(req,uriInfo.getParameters(),config.getHttpSessionCreator());
+				dispatcher.initActionContext(newReq, resp);
 				dispatcher.startAction(actionInvocation);
+				dispatcher.cleanRequest();
+				return;
 			}
 		}
 		dispatcher.cleanRequest();
+		chain.doFilter(request, response);
 	}
 
 	public void destroy() {

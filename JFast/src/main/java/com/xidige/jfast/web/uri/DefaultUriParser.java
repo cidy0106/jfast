@@ -2,7 +2,9 @@ package com.xidige.jfast.web.uri;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
@@ -58,7 +60,7 @@ public class DefaultUriParser implements UriParser {
 		
 			}
 			
-			Map<String, String>params=parseParameters(uriInfos, i,encode);			
+			Map<String, List<String>>params=parseParameters(uriInfos, i,encode);			
 			
 			UriInfo uriInfo = new UriInfo();
 			// action 只能是字母
@@ -78,14 +80,14 @@ public class DefaultUriParser implements UriParser {
 	 * 记得检测 start的值,不能超过uriInfos的长度
 	 * 
 	 * 1,参数名不为空时,参数 值 可以为空
-	 * 2,前面的值优先原则,     也就是如果有多个同名参数,那么只保留最开始的那个的值
+	 * 2,支持多值，uri上的参数优先，然后是默认的get，post参数
 	 * @param uriInfos
 	 * @param start
 	 */
-	protected final Map<String, String> parseParameters(String []uriInfos,int start,String encode){
-		Map<String, String>params =null;
+	protected Map<String, List<String>> parseParameters(String []uriInfos,int start,String encode){
+		Map<String, List<String>>params =null;
 		if (start<uriInfos.length) {
-			params=new HashMap<String, String>();
+			params=new HashMap<String, List<String>>();
 			String name = null, value = null;
 			// /a/2/d/4/f,值都会解码
 			for (int i=start; i < uriInfos.length;) {
@@ -109,9 +111,12 @@ public class DefaultUriParser implements UriParser {
 				}
 				i++;//下次循环
 				
-				if (!params.containsKey(name)) {
-					params.put(name, value);
+				List<String>vals=params.get(name);
+				if (vals==null) {
+					vals=new ArrayList<String>();
+					params.put(name, vals);
 				}
+				vals.add(value);
 			}
 			
 			return params;

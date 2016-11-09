@@ -1,69 +1,105 @@
 package com.xidige.jfast.web;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
 import javax.servlet.http.HttpSession;
+
+import com.xidige.jfast.web.session.IHttpSessionCreator;
 /**
  * 改写原有的request实现
  * 
- * 1,引入自己的session，使用第三方缓存组件重新实现session的存取
- * 2,引入自己的attribute，使用第三方缓存组件重新实现attribute的存取
- * 3,重新解析出uri中的参数（比如：/action/method/arg/val1/arg/val2/×/×）
+ * 重新解析出uri中的参数（比如：/action/method/arg/val1/arg/val2/×/×）
  * @author kime
  *
  */
-public class DefaultHttpServletRequest extends HttpServletRequestWrapper implements HttpServletRequest {
-	private Map<String,String[]> params=null;
+public class DefaultHttpServletRequest extends HttpServletRequestWrapper{
+	/**
+	 * 外部传进来的,可能是自定义解析出来的参数，会合并到原来web容器解析出的参数上去，这里的参数优先比容器的高
+	 */
+	private Map<String,List<String>> params=null;
+	private IHttpSessionCreator httpSessionCreator;
+	
+	private final static IHttpSessionCreator defaultHttpSessionCreator=new IHttpSessionCreator() {
+		@Override
+		public HttpSession doCreateSession(HttpServletRequest request, boolean created) {
+			return request.getSession(created);
+		}
+	};
 	/**
 	 * 
 	 * @param request 原始请求
 	 * @param params 附加的参数
 	 */
-	public DefaultHttpServletRequest(HttpServletRequest request,Map<String, String[]>params) {
+	public DefaultHttpServletRequest(HttpServletRequest request,Map<String, List<String>>params,IHttpSessionCreator httpSessionCreator) {
 		super(request);
 		this.params=params;
+		if (httpSessionCreator==null) {
+			this.httpSessionCreator=defaultHttpSessionCreator;
+		}else{
+			this.httpSessionCreator=httpSessionCreator;
+		}
 	}	
 	public DefaultHttpServletRequest(HttpServletRequest request) {
-		this(request,null);
+		this(request,null,null);
 	}
 	
 	private Map<String,String[]>paramMap=null;//参数缓存
 	@Override
 	public Map<String,String[]> getParameterMap() {
-		if (paramMap!=null) {
+		if (paramMap!=null && !paramMap.isEmpty()) {
 			return paramMap;
 		}
-		paramMap=new HashMap<String, String[]>();
-		paramMap.putAll(super.getParameterMap());
-		for (Iterator<Entry<String, String[]>> iterator = params.entrySet().iterator(); iterator.hasNext();) {
-			Entry<String, String[]> entry = iterator.next();
-			String[] origParam=paramMap.get(entry.getKey());
-			if (origParam==null ||origParam.length==0) {
-				paramMap.put(entry.getKey(), entry.getValue());
-			}else {
-				String entryValues[]=entry.getValue();
-				if(entryValues==null || entryValues.length==0){
+		
+		//把容器的参数附加到自定义参数后面
+		Map<String, String[]> containerMap= super.getParameterMap();
+		if(containerMap!=null){
+			if(params==null){
+				params=new HashMap<String, List<String>>();
+			}
+			
+			for (Iterator<Entry<String, String[]>> iterator = containerMap.entrySet().iterator(); iterator.hasNext();) {
+				Entry<String, String[]> entry = iterator.next();
+				String[]tmpVals=entry.getValue();
+				if(tmpVals==null || tmpVals.length==0){
 					continue;
 				}
-				String newValues[]=new String[origParam.length+entryValues.length];
-				int index=0;
-				for (; index < entryValues.length; index++) {
-					newValues[index]=entryValues[index];
-				}
-				for (int i = 0; i < origParam.length; i++) {
-					newValues[index++]=origParam[i];
-				}
 				
-				paramMap.put(entry.getKey(), newValues);					
+				List<String>vals= params.get(entry.getKey());
+				if(vals==null){
+					vals=new ArrayList<String>();
+					params.put(entry.getKey(), vals);
+				}
+				for (int i = 0; i < tmpVals.length; i++) {
+					vals.add(tmpVals[i]);
+				}
 			}
 		}
+		
+		//list转到数组去
+		if(params!=null && params.size()>0){
+			paramMap=new HashMap<String, String[]>();
+			for (Iterator<Entry<String, List<String>>> iterator = params.entrySet().iterator(); iterator.hasNext();) {
+				Entry<String, List<String>> entry = iterator.next();
+				List<String>tmpVals=entry.getValue();
+				if(tmpVals!=null && !tmpVals.isEmpty()){
+					String[]cVals=new String[tmpVals.size()];
+					tmpVals.toArray(cVals);
+					paramMap.put(entry.getKey(), cVals);
+				}else{
+					paramMap.put(entry.getKey(), null);
+				}
+			}
+		}
+		
 		return paramMap; 
 	}
 	/**
@@ -75,7 +111,7 @@ public class DefaultHttpServletRequest extends HttpServletRequestWrapper impleme
 		if (name==null) {
 			return name;
 		}
-		Map<String, String[]> tempParamMap=getParameterMap();
+		Map<String, String[]> tempParamMap=this.getParameterMap();
 		if (tempParamMap!=null && tempParamMap.size()>0) {
 			String[] tempValue=tempParamMap.get(name);
 			if (tempValue!=null && tempValue.length>0) {
@@ -86,8 +122,11 @@ public class DefaultHttpServletRequest extends HttpServletRequestWrapper impleme
 	}
 	@Override
 	public String[] getParameterValues(String name) {
-		Map<String, String[]> tempParamMap=getParameterMap();
-		return tempParamMap.get(name);
+		Map<String, String[]> tempParamMap=this.getParameterMap();
+		if(tempParamMap!=null){
+			return tempParamMap.get(name);
+		}
+		return null;
 	}
 	private Enumeration<String>paramNames=null;
 	@Override
@@ -95,7 +134,7 @@ public class DefaultHttpServletRequest extends HttpServletRequestWrapper impleme
 		if (paramNames!=null) {
 			return paramNames;
 		}
-		Map<String, String[]> tempParamMap=getParameterMap();
+		Map<String, String[]> tempParamMap=this.getParameterMap();
 		if (tempParamMap!=null) {
 			paramNames=Collections.enumeration(tempParamMap.keySet());
 		}
@@ -107,12 +146,9 @@ public class DefaultHttpServletRequest extends HttpServletRequestWrapper impleme
 	public HttpSession getSession() {		
 		return this.getSession(true);
 	}
+	
 	@Override
 	public HttpSession getSession(boolean create) {
-		HttpSession session=super.getSession(create);
-		if(session!=null){
-			return DefaultHttpSessionHandler.wrapSession(session);
-		}
-		return null;
+		return httpSessionCreator.doCreateSession((HttpServletRequest) super.getRequest(), create);
 	}
 }

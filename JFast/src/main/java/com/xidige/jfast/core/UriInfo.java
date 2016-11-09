@@ -1,16 +1,17 @@
 package com.xidige.jfast.core;
 
+import java.util.List;
 import java.util.Map;
 
 public class UriInfo {
 	private String actionName;
 	private String methodName;
-	private Map<String, String>parameters;
+	private Map<String, List<String>>parameters;
 	
-	public Map<String, String> getParameters() {
+	public Map<String, List<String>> getParameters() {
 		return parameters;
 	}
-	public void setParameters(Map<String, String> parameters) {
+	public void setParameters(Map<String, List<String>> parameters) {
 		this.parameters = parameters;
 	}
 	public String getActionName() {
