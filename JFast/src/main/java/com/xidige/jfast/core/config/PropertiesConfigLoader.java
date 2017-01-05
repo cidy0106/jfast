@@ -30,7 +30,7 @@ public class PropertiesConfigLoader implements ConfigLoader {
 	private String propertiesFile=null;
 	public PropertiesConfigLoader(String propertiesFile) {
 		if (propertiesFile==null || "".equals(propertiesFile)) {
-			this.propertiesFile="jfast.properties";
+			this.propertiesFile="/jfast.properties";
 		}else {
 			this.propertiesFile=propertiesFile;
 		}		

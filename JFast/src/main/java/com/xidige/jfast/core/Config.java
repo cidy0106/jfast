@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.xidige.jfast.web.session.IHttpSessionCreator;
+import com.xidige.jfast.web.session.HttpSessionCreator;
 /**
  * 配置
  * @author kime
@@ -18,7 +18,7 @@ public class Config {
 	private List<ActionLookup>actionLookups=new ArrayList<ActionLookup>();//action搜索器
 	private Map<String, Object>attrs=new HashMap<String, Object>();
 	private Config readonlyObject=null;
-	private IHttpSessionCreator httpSessionCreator=null;//session
+	private HttpSessionCreator httpSessionCreator=null;//session
 	
 	/**
 	 * 获取一个只读属性的配置
@@ -61,10 +61,10 @@ public class Config {
 	public Object getAttr(String key){
 		return attrs.get(key);
 	}
-	public IHttpSessionCreator getHttpSessionCreator() {
+	public HttpSessionCreator getHttpSessionCreator() {
 		return httpSessionCreator;
 	}
-	public void setHttpSessionCreator(IHttpSessionCreator httpSessionCreator) {
+	public void setHttpSessionCreator(HttpSessionCreator httpSessionCreator) {
 		this.httpSessionCreator = httpSessionCreator;
 	}
 	

@@ -8,6 +8,7 @@ import javax.servlet.FilterConfig;
 import com.xidige.jfast.core.ConfigFactory;
 import com.xidige.jfast.core.ConfigLoader;
 import com.xidige.jfast.core.config.FilterConfigLoader;
+import com.xidige.jfast.core.config.PropertiesConfigLoader;
 
 public class MyConfigLoadFactory implements ConfigFactory {
 //	private static Log
@@ -15,7 +16,7 @@ public class MyConfigLoadFactory implements ConfigFactory {
 	public List<ConfigLoader> getConfigLoaders(FilterConfig filterConfig) {
 		List<ConfigLoader>loaders=new ArrayList<ConfigLoader>();
 		loaders.add(new FilterConfigLoader(filterConfig));
-//		loaders.add(new PropertiesConfigLoader(null));
+		loaders.add(new PropertiesConfigLoader(null));
 		loaders.add(new MyConfigLoader());
 		return loaders;
 	}

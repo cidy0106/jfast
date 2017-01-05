@@ -14,6 +14,7 @@
 		<target.version>1.8</target.version>
 		<servlet.version>3.1.0</servlet.version>
 		<jsp.version>2.3.1</jsp.version>
+		<redisclients.version>2.9.0</redisclients.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -40,6 +41,12 @@
 			<artifactId>javax.servlet.jsp-api</artifactId>
 			<version>${jsp.version}</version>
 			<scope>provided</scope>
+		</dependency>
+		
+		<dependency>
+			<groupId>redis.clients</groupId>
+			<artifactId>jedis</artifactId>
+			<version>${redisclients.version}</version>
 		</dependency>
 	</dependencies>
 	<build>

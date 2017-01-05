@@ -13,7 +13,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
 import javax.servlet.http.HttpSession;
 
-import com.xidige.jfast.web.session.IHttpSessionCreator;
+import com.xidige.jfast.web.session.HttpSessionCreator;
 /**
  * 改写原有的request实现
  * 
@@ -26,12 +26,12 @@ public class DefaultHttpServletRequest extends HttpServletRequestWrapper{
 	 * 外部传进来的,可能是自定义解析出来的参数，会合并到原来web容器解析出的参数上去，这里的参数优先比容器的高
 	 */
 	private Map<String,List<String>> params=null;
-	private IHttpSessionCreator httpSessionCreator;
+	private HttpSessionCreator httpSessionCreator;
 	
-	private final static IHttpSessionCreator defaultHttpSessionCreator=new IHttpSessionCreator() {
+	private final static HttpSessionCreator defaultHttpSessionCreator=new HttpSessionCreator() {
 		@Override
-		public HttpSession doCreateSession(HttpServletRequest request, boolean created) {
-			return request.getSession(created);
+		public HttpSession doCreateSession(RequestContext requestContext, boolean created) {
+			return requestContext.getRequest().getSession(created);
 		}
 	};
 	/**
@@ -39,7 +39,7 @@ public class DefaultHttpServletRequest extends HttpServletRequestWrapper{
 	 * @param request 原始请求
 	 * @param params 附加的参数
 	 */
-	public DefaultHttpServletRequest(HttpServletRequest request,Map<String, List<String>>params,IHttpSessionCreator httpSessionCreator) {
+	public DefaultHttpServletRequest(HttpServletRequest request,Map<String, List<String>>params,HttpSessionCreator httpSessionCreator) {
 		super(request);
 		this.params=params;
 		if (httpSessionCreator==null) {
@@ -149,6 +149,6 @@ public class DefaultHttpServletRequest extends HttpServletRequestWrapper{
 	
 	@Override
 	public HttpSession getSession(boolean create) {
-		return httpSessionCreator.doCreateSession((HttpServletRequest) super.getRequest(), create);
+		return httpSessionCreator.doCreateSession(RequestContext.getContext(),create);
 	}
 }
