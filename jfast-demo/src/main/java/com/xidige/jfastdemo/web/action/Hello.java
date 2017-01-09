@@ -5,6 +5,7 @@ import java.util.Enumeration;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import com.xidige.jfast.core.log.Log;
@@ -17,10 +18,36 @@ public class Hello {
 	private static final String MESSAGE_STRING="Hi,i am kime,who are you~";
 	private static final String TEMPLATE_PATH="/WEB-INF/jsp/";
 	
-	public void index() throws IOException{
+	public void index() throws IOException, ServletException{
 		RequestContext requestContext = RequestContext.getContext();
-		requestContext.getResponse().getWriter().append("index....").flush();
+//		requestContext.getResponse().getWriter().append("index....").flush();
+		HttpServletRequest request=requestContext.getRequest();
+		HttpSession session=request.getSession(false);
+		if(session!=null){
+			String user=(String) session.getAttribute("user");
+			if(user!=null){
+				requestContext.redirect(TEMPLATE_PATH+"hello.jsp");
+				return;
+			}
+		}
+		requestContext.redirect(TEMPLATE_PATH+"loginForm.jsp");
 	}
+	
+	public void login() throws IOException{
+		RequestContext requestContext = RequestContext.getContext();
+		HttpServletRequest request=requestContext.getRequest();
+		String username=request.getParameter("username");
+		String password=request.getParameter("password");
+		if("admin".equals(username) && "admin".equals(password)){
+			HttpSession session=request.getSession(true);
+			session.setAttribute("user", "admin");
+		}
+//		requestContext.getResponse().getWriter().append("{\"error\":\"false\"}").flush();
+		HttpServletResponse response=requestContext.getResponse();
+		response.sendRedirect("index");
+	}
+	
+	
 	public void sayHi(){
 		//to console
 		System.out.println(MESSAGE_STRING);
@@ -35,6 +62,10 @@ public class Hello {
 		}
 		
 	}
+	
+	/**
+	 * 登录表单
+	 */
 	public void sayHtml(){
 		//to html
 		RequestContext requestContext = RequestContext.getContext();
@@ -43,7 +74,7 @@ public class Hello {
 			HttpServletRequest request=requestContext.getRequest();
 			String username=request.getParameter("username");
 			request.setAttribute("reply", username+",你好啊");
-			requestContext.redirect(TEMPLATE_PATH+"hello.jsp");
+			requestContext.redirect(TEMPLATE_PATH+"loginForm.jsp");
 		} catch (IOException | ServletException e) {
 			log.error("sayHtml error", e);
 		}				

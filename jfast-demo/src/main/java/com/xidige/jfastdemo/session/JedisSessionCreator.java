@@ -25,7 +25,8 @@ public class JedisSessionCreator implements HttpSessionCreator {
 	};
 	
 	@Override
-	public HttpSession doCreateSession(RequestContext requestContext, boolean created) {
+	public HttpSession doCreateSession(boolean created) {
+		RequestContext requestContext=RequestContext.getContext();
 		HttpServletRequest request=requestContext.getRequest();
 		HttpServletResponse response=requestContext.getResponse();
 		String sessionId=request.getRequestedSessionId();

@@ -28,12 +28,6 @@ public class DefaultHttpServletRequest extends HttpServletRequestWrapper{
 	private Map<String,List<String>> params=null;
 	private HttpSessionCreator httpSessionCreator;
 	
-	private final static HttpSessionCreator defaultHttpSessionCreator=new HttpSessionCreator() {
-		@Override
-		public HttpSession doCreateSession(RequestContext requestContext, boolean created) {
-			return requestContext.getRequest().getSession(created);
-		}
-	};
 	/**
 	 * 
 	 * @param request 原始请求
@@ -43,7 +37,13 @@ public class DefaultHttpServletRequest extends HttpServletRequestWrapper{
 		super(request);
 		this.params=params;
 		if (httpSessionCreator==null) {
-			this.httpSessionCreator=defaultHttpSessionCreator;
+			this.httpSessionCreator=new HttpSessionCreator() {
+				
+				@Override
+				public HttpSession doCreateSession(boolean created) {
+					return request.getSession(created);
+				}
+			};
 		}else{
 			this.httpSessionCreator=httpSessionCreator;
 		}
@@ -149,6 +149,6 @@ public class DefaultHttpServletRequest extends HttpServletRequestWrapper{
 	
 	@Override
 	public HttpSession getSession(boolean create) {
-		return httpSessionCreator.doCreateSession(RequestContext.getContext(),create);
+		return httpSessionCreator.doCreateSession(create);
 	}
 }
